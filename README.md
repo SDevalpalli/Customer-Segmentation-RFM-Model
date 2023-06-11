@@ -12,10 +12,10 @@ Along with the customer segmentation for email marketing, the below KPIs were ca
 
 Below is a schema of how the customer base was segmented via the recency, frequency and monetary elements of RFM.
 
-Ranked each section 1-5.
-Recency - the date of a customer’s last order.
-Frequency - the total number of transactions per customer.
-Monetary - total revenue generated per customer.  
+* Ranked each section 1-5.
+* Recency - the date of a customer’s last order.
+* Frequency - the total number of transactions per customer.
+* Monetary - total revenue generated per customer.  
 
 Score | Recency | Description
 :---: | :---------: | :---------------------------:
