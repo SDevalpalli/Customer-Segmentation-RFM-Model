@@ -48,4 +48,6 @@ Using this scoring system we could segment the customers and personalise recomme
 
 Below is the finalised dashboard used in the reports of the project:
 
+![Power BI Dashboard for RFM Segemntation](https://github.com/SDevalpalli/Customer-Segmentation-RFM-Model/commit/24a5f2d876fec7e3c612fb07d7457120ed867077)
+
 ![Customer Segmentation_RFM_Dashboard](https://github.com/SDevalpalli/Customer-Segmentation-RFM-Model/assets/ff95296bd9f6e7139d3b253b03128de427be57c3)
