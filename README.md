@@ -4,6 +4,7 @@ The tools used in this project are as follows:
 * SQL using BigQuery
 * Microsoft Power BI
 * Microsoft Powerpoint
+
 Along with the customer segmentation for email marketing, the below KPIs were calculated for each segment to compare how customer behaviour changed over time:
 * Total Revenue per segment
 * No. of customers per segment who opted for email.
