@@ -9,7 +9,9 @@ Along with the customer segmentation for email marketing, the below KPIs were ca
 * Total Revenue per segment
 * No. of customers per segment who opted for email.
 * Average email conversion rate.
+
 Below is a schema of how the customer base was segmented via the recency, frequency and monetary elements of RFM.
+
 Ranked each section 1-5.
 Recency - the date of a customer’s last order.
 Frequency - the total number of transactions per customer.
@@ -22,6 +24,7 @@ Score | Recency | Description
   3   | 3rd 20% |  Somewhat Recent
   4   | 4th  20% |  Less Recent
   5   | 5th 20%  |  Not Recent
+  
 
 Score | Frequency | Description
 :---: | :----------: | :---------------------------:
@@ -30,14 +33,15 @@ Score | Frequency | Description
   3   | Top 30% |  Somewhat Frequent
   4   | Top 60% |  Less Frequent
   5   | Bottom   |  Not Frequent
+  
 
 Score | Monetary | Description
 :---: | :----------: | :---------------------------:
   1   | Top 5%    |  Most Money
   2   | Top  20% |  High Money
   3   | Top 30% |  Medium Money
-  3   | Top 60% |  Low Money
-  3   | Bottom   |  Lowest Money
+  4   | Top 60% |  Low Money
+  5   | Bottom   |  Lowest Money
   
   
 Using this scoring system we could segment the customers and personalise recommendations for these separate groups to increase the conversion rate from email to purchase.
