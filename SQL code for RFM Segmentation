@@ -1,0 +1,142 @@
+# Customer-Segmentation-RFM-Model
+# An e-commerce business project using a suitable customer segmentation model wanted to initiate an email marketing campaign. RFM model was chosen to identify the customers who are targeted for email marketing and encourage them to visit the website and improve the business.
+# Step 1:
+# Saved the result in a table called prism_test.Indigo-SC-W1-Basis
+
+WITH temp AS
+(SELECT user_crm_id
+FROM `Prism_Main.users`
+WHERE opt_in_status = TRUE
+  AND user_crm_id IN
+    (
+      SELECT user_crm_id
+      FROM `Prism_Main.sessions`
+      WHERE traffic_source = 'email'
+    )
+),
+temp2 AS
+(
+  SELECT date, user_crm_id, SUM(transaction_revenue) AS total_revenue, COUNT(transaction_revenue) AS no_transactions
+FROM `Prism_Main.transactions`
+WHERE user_crm_id IN
+(
+  SELECT user_crm_id
+  FROM temp
+)
+GROUP BY date, user_crm_id
+),
+temp3 AS
+(
+  SELECT date, user_crm_id, COUNT(DISTINCT session_id) AS total_visits
+  FROM `Prism_Main.funnelevents`
+  WHERE user_crm_id IN
+    (
+      SELECT user_crm_id
+      FROM temp
+    )
+  GROUP BY date, user_crm_id
+),
+temp4 AS
+(
+  SELECT date, user_crm_id, COUNT(DISTINCT session_id) AS total_purchase
+  FROM `Prism_Main.funnelevents`
+  WHERE user_crm_id IN
+    (
+      SELECT user_crm_id
+      FROM temp
+    ) AND event_name = 'purchase'
+  GROUP BY date, user_crm_id
+)
+SELECT temp2.date, temp2.user_crm_id, temp2.total_revenue, temp2.no_transactions, temp3.total_visits, temp4.total_purchase
+FROM temp2
+LEFT JOIN temp3
+  ON temp2.user_crm_id = temp3.user_crm_id AND temp2.date = temp3.date
+LEFT JOIN temp4
+  ON temp3.user_crm_id = temp4.user_crm_id AND temp3.date = temp4.date;
+
+
+
+# Step 2:
+# Saved the result in a table called prism_test.Indigo-SC-W1-Seg
+
+WITH temp AS (SELECT format_date('%Y', date) AS year, user_crm_id, SUM(total_revenue) as total_revenue, SUM(no_transactions) AS no_transactions, SUM(total_visits) AS total_visits, SUM(total_purchase) AS total_purchases
+FROM `prism_test.Indigo-SC-W1-Basis`
+GROUP BY year, user_crm_id),
+temp2 AS
+(SELECT user_crm_id, date,MAX(date) OVER (PARTITION BY user_crm_id, format_date('%Y', date)) AS last_purchase_of_year
+FROM `prism_test.Indigo-SC-W1-Basis`
+GROUP BY user_crm_id, date),
+temp3 AS
+(SELECT user_crm_id, format_date('%Y', date) AS year, last_purchase_of_year
+FROM temp2
+GROUP BY year, user_crm_id, last_purchase_of_year
+ORDER BY user_crm_id
+)
+SELECT temp.*, temp3. last_purchase_of_year
+FROM temp
+JOIN temp3
+  ON temp.user_crm_id = temp3.user_crm_id AND temp.year = temp3.year
+ORDER BY user_crm_id
+
+
+
+# Step 3:
+# Saved the result in a table called prism_test.Indigo_Final_Seg
+
+
+WITH t1 AS
+  (
+    SELECT *,
+      SUM(no_transactions) OVER (PARTITION BY user_crm_id ORDER BY last_purchase_of_year) AS running_transactions,
+      SUM(total_revenue) OVER (PARTITION BY user_crm_id ORDER BY last_purchase_of_year) AS running_revenue,
+    FROM `prism_test.Indigo-SC—W1-Seg`
+  ),
+t2 AS
+(
+  SELECT *,
+    NTILE(5) OVER (PARTITION BY year ORDER BY last_purchase_of_year) AS R,
+    NTILE(100) OVER (PARTITION BY year ORDER BY running_transactions) AS f_percentile,
+    NTILE(100) OVER (PARTITION BY year ORDER BY total_revenue) AS m_percentile
+  FROM t1
+),
+t3 AS
+(
+  SELECT *,
+    CASE
+      WHEN f_percentile >= 95 THEN 5
+      WHEN f_percentile >= 80 THEN 4
+      WHEN f_percentile >= 70 THEN 3
+      WHEN f_percentile >= 40 THEN 2
+      ELSE 1
+    END AS F,
+    CASE
+      WHEN m_percentile >= 95 THEN 5
+      WHEN m_percentile >= 80 THEN 4
+      WHEN m_percentile >= 70 THEN 3
+      WHEN m_percentile >= 40 THEN 2
+      ELSE 1
+    END AS M
+  FROM t2
+),
+t4 AS
+(
+  SELECT *,
+    CASE
+      WHEN R BETWEEN 4 AND 5 AND F BETWEEN 4 AND 5 AND M BETWEEN 4 AND 5 THEN “Champions”
+      WHEN R BETWEEN 2 AND 4 AND F BETWEEN 3 AND 4 AND M BETWEEN 4 AND 5 THEN “Loyal Customer”
+      WHEN R BETWEEN 3 AND 5 AND F BETWEEN 1 AND 5 AND M BETWEEN 1 AND 3 THEN “Potential Loyalist”
+      WHEN R BETWEEN 4 AND 5 AND F <= 2 AND M <= 2 THEN “New Customer”
+      WHEN R BETWEEN 3 AND 4 AND F <= 2 AND M <= 2 THEN “Promising”
+      WHEN R BETWEEN 3 AND 4 AND F BETWEEN 3 AND 4 AND M BETWEEN 3 AND 4 THEN “Need Attention”
+      WHEN R BETWEEN 2 AND 3 AND F < 3 AND M < 3 THEN “About To Sleep”
+      WHEN R < 3 AND F BETWEEN 2 AND 5 AND M BETWEEN 2 AND 5 THEN “At Risk”
+      WHEN R < 2 AND F BETWEEN 4 AND 5 AND M BETWEEN 4 AND 5 THEN “cCn’t Lose Them”
+      WHEN R BETWEEN 1 AND 3 AND F BETWEEN 1 AND 3 AND M BETWEEN 2 AND 5 THEN “Hibernating”
+      WHEN R <= 2 AND F <= 2 AND M <= 2 THEN “Lost”
+    END AS segment
+  FROM t3
+)
+SELECT *
+FROM t4
+ORDER BY user_crm_id, year
+
